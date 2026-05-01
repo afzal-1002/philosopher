@@ -1,9 +1,6 @@
 #include "philo.h"
 
-/*
- *  malloc and free functions will be used to allocate and deallocate memory for the philosophers and forks. 
-*/
-
+/* Allocate memory or exit on failure/invalid size. */
 void *safe_malloc(size_t size)
 {
     void    *ptr;

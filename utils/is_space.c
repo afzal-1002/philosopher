@@ -1,10 +1,6 @@
 #include "philo.h"
 
-/* 
- * To check if a character is a whitespace character (space, tab, newline, etc.). 
- * This function will be used in the ft_atol function to skip leading whitespace characters when converting a string to a long integer. 
- * The function returns true if the character is a whitespace character and false otherwise.
-*/
+/* Return 1 when c is ASCII whitespace; otherwise return 0. */
 int is_space(char c) {
     return (c == ' ' || (c >= '\t' && c <= '\r'));
 }

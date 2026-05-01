@@ -1,14 +1,6 @@
 #include "philo.h"
 
-/*
- * Philosophers sit around a table with forks between them.
- * To eat, each needs two forks (left and right).
- * Problem: if everyone grabs one fork, no one can eat (deadlock).
- * Also, some may never get a chance to eat (starvation).
- * Goal: make sure everyone can eat safely.
- * Solution: use mutexes/semaphores to control fork usage.
-*/
-
+/* Synchronization helpers for start barrier and thread counters. */
 void wait_all_thread_ready(t_table *table) {
 
     while (!get_bool_value(&table->table_mutex, &table->all_thread_ready)) {
@@ -18,4 +10,24 @@ void wait_all_thread_ready(t_table *table) {
     while (!simulation_start(table)) {
         usleep(100);
     }
+}
+
+
+void increment_long(t_mutex *mutex, long *validate_input) {
+    safe_mutex_handler(mutex, LOCK);
+    (*validate_input)++;
+    safe_mutex_handler(mutex, UNLOCK);
+}
+
+
+/* Return true when all philosopher threads have started running. */
+bool all_thread_running(t_mutex *mutex, long *thread_running_count, long num_philos) {
+    bool all_running;
+
+    all_running = false;
+    safe_mutex_handler(mutex, LOCK);
+    all_running = (*thread_running_count == num_philos);
+    safe_mutex_handler(mutex, UNLOCK);
+
+    return all_running;
 }

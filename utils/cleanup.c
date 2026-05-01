@@ -1,9 +1,6 @@
 #include "philo.h"
 
-/*
- * Cleanup function to free all allocated memory and destroy mutexes
- * This function is called after the simulation ends to clean up resources
- */
+/* Free allocated resources and destroy all mutexes. */
 void cleanup(t_table *table) {
     int i;
 

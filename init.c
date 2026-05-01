@@ -5,13 +5,7 @@ void philo_init(t_table *table) ;
 void data_init(t_table *table) ;
 void assign_forks(t_philo *philo, t_fork *forks, int index);
 
-/*
- * This function will initialize the data structures for the philosophers 
- * and forks based on the number of philosophers specified in the table structure. 
- * It will allocate memory for the philosophers and forks, initialize their attributes, 
- * and set up any necessary synchronization primitives (e.g., mutexes for the forks).
-*/
-
+/* Initialize shared data, memory, and mutexes. */
 void data_init(t_table *table) {
 
     int i;
@@ -21,7 +15,7 @@ void data_init(t_table *table) {
     table->simulation_end_time = 0;
     table->all_thread_ready = false;
     table->simulation_should_end = false;
-    table->philos = safe_malloc(sizeof(t_philo) * table->num_philos);
+    table->thread_running_count = 0;
     table->philos = safe_malloc(sizeof(t_philo) * table->num_philos);
     table->forks = safe_malloc(sizeof(t_fork) * table->num_philos);
     safe_mutex_handler(&table->table_mutex, INIT);

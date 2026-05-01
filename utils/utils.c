@@ -10,16 +10,7 @@ void error_exit(const char *message) {
     exit(EXIT_FAILURE);
 }
 
-/*
- * time_code is a utility function that retrieves the current time in milliseconds.
- * gettimeofday() is a system call that retrieves the current time of day, 
- * expressed as the number of seconds and microseconds since the Unix epoch (January 1, 1970).
- * In the context of the dining philosophers problem, gettimeofday() can be used to measure the time 
- * taken for various actions, such as eating, sleeping, and thinking. 
- * By recording the start and end times of these actions, we can analyze
- *  the performance and behavior of the philosophers.
-*/
-
+/* Return current time in seconds, milliseconds, or microseconds. */
 long get_time_in_ms(t_time_code time_code) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -42,12 +33,7 @@ long get_time_in_ms(t_time_code time_code) {
 }
 
 
-/*
- * precision_sleep pauses execution for a given time in ms.
- * It loops with short sleeps for better accuracy than usleep().
- * Used to simulate actions like eating, sleeping, and thinking.
- * 01: Get the current time in milliseconds at the start of the sleep.
-*/
+/* Sleep with periodic checks so simulation can stop promptly. */
 void precision_usleep(long duration_in_ms, t_table *table) {
     long start_time ;
     long elapsed_time;
@@ -59,17 +45,10 @@ void precision_usleep(long duration_in_ms, t_table *table) {
             break;
         elapsed_time = get_time_in_ms(MILLISECOND) - start_time;
         remaining_time = duration_in_ms - elapsed_time;
-        if (remaining_time > 1000) 
-            usleep(duration_in_ms / 2); // Sleep for the remaining time in microseconds
+        if (remaining_time > 1)
+            usleep(remaining_time * 1000);
         else
-        {
-            while (get_time_in_ms(MILLISECOND) - start_time < duration_in_ms) {
-                if (simulation_end(table)) // Check if the simulation has ended to avoid unnecessary sleeping.
-                    break;
-                usleep(100); // Sleep for a short time to avoid busy waiting
-            }
-        }
-            
+            usleep(100);
 
     }
 }

@@ -1,5 +1,4 @@
 #include "philo.h"
-#include <ctype.h>
 
 
 /*  Converts a string to a long integer. It handles optional leading whitespace, an optional sign, and numeric characters.
@@ -17,7 +16,6 @@ const char *validate_input(const char *str);
 
 
 void parse_input(char **argv, t_table *table) {
-    /* Diagnostic prints to identify which argument may be empty */
     table->num_philos = ft_atol(argv[1]);
     table->time_to_die = ft_atol(argv[2]);
     table->time_to_eat = ft_atol(argv[3]);
@@ -39,7 +37,7 @@ long ft_atol(const char *str) {
     number = 0;
     str = validate_input(str);
 
-    while (*str != '\0' && isdigit((unsigned char)*str)) {
+    while (*str != '\0' && is_digit(str)) {
         number = number * 10 + (*str - '0');
         str++;
     }

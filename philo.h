@@ -13,21 +13,17 @@
 #include <errno.h> // For error handling
 
 
-/* 
-* ./phiilo 5 800 200 200 [5]
-*/
+/* ./philo num_philos time_to_die time_to_eat time_to_sleep [meals_required] */
 
 
-//** Defines **/
+/* Types */
 typedef pthread_mutex_t t_mutex;
 typedef struct s_table t_table;
 typedef struct s_fork t_fork;
 typedef struct s_philo t_philo;
 
 
-// ANSI Escape Codes for colored output
-// pirntf(RED "This text will be red" RESET);
-// fprintf(GREEN "This text will be green" RESET);
+// ANSI escape codes for terminal output colors.
 
 #define RED "\033[31m" // Red color
 #define GREEN "\033[32m" // Green color
@@ -35,18 +31,16 @@ typedef struct s_philo t_philo;
 #define BLUE "\033[34m" // Blue color
 #define MAGENTA "\033[35m" // Magenta color
 #define CYAN "\033[36m" // Cyan color
-#define RESET "\033[0m" // Reset color Define for error messages
+#define RESET "\033[0m" // Reset color
 #define WHITE "\033[37m" // White color for regular messages
 #define ERROR_COLOR RED
 #define ERROR_RESET RESET
 
-#define DEBUG_MODE 1 // Set to 1 to enable debug mode, 0 to disable
+#define DEBUG_MODE 0 // Set to 1 to enable debug mode, 0 to disable
 
 
 
-/*
-    OPCODE Mutex and Thread Functions:
-*/
+/* Opcodes for mutex/thread handlers */
 typedef enum e_opcode {
     LOCK,
     UNLOCK,
@@ -59,9 +53,7 @@ typedef enum e_opcode {
 } t_opcode;
 
 
-/*
- * enums for the GET TIME function
-*/
+/* Time unit selector */
 typedef enum e_time_code {
     SECOND,
     MILLISECOND,
@@ -69,7 +61,7 @@ typedef enum e_time_code {
 } t_time_code;
 
 
-/* Philo states*/
+/* Philosopher states */
 typedef enum e_philo_status {
 
     EATING,
@@ -81,7 +73,7 @@ typedef enum e_philo_status {
 } t_philo_status;
 
 
-//** Structures ***
+/* Structures */
 
 typedef struct  s_fork
 {
@@ -92,7 +84,7 @@ typedef struct  s_fork
 
 
 
-// Philosopher
+/* Philosopher */
 typedef struct s_philo{
     int ph_id; // Philosopher ID
     long meals_counter; // Counter for the number of meals eaten by the philosopher
@@ -107,10 +99,7 @@ typedef struct s_philo{
 } t_philo;
 
 
-/* 
-    Table 
-    ./philo num_philos time_to_die time_to_eat time_to_sleep [meals_required]
-*/
+/* Shared table state */
 typedef struct s_table{
     long num_philos; // Number of philosophers
     long time_to_die; // Time to die in milliseconds
@@ -119,10 +108,12 @@ typedef struct s_table{
     long num_meals_required; // Number of meals required for each philosopher to be considered full
     long simulation_start_time; // Time when the simulation starts in milliseconds
     long simulation_end_time; // Time when the simulation ends in milliseconds
+    long thread_running_count; // Counter for the number of philosopher threads currently running
     bool all_thread_ready; // Flag to indicate if all philosophers are ready to start
     bool simulation_should_end; // Flag to indicate if the simulation should end (someone died or all full)
-    t_mutex table_mutex; // avoid races while reading/writing from the table Mutex for synchronizing print statements // avoid read/write conflicts when multiple threads print to the console at the same time
+    t_mutex table_mutex; // Protects shared table fields
     t_mutex write_mutex; // Mutex for synchronizing print statements
+    pthread_t monitor; // Thread ID for the monitor thread
     t_philo *philos; // Array of philosophers
     t_fork *forks; // Array of forks
 
@@ -130,8 +121,8 @@ typedef struct s_table{
 
 
 
-//** Function Prototypes **
-/* parsing.c function prototypes   */
+/* Function prototypes */
+/* parsing.c */
 int is_space(char c);
 int is_digit(const char *str);
 int is_digit_space(const char *str);
@@ -140,21 +131,22 @@ void parse_input(char **argv, t_table *table);
 const char *validate_input(const char *str);
 
 
-/* safe functions prototypes */
+/* safe helpers */
 void *safe_malloc(size_t size);
 void safe_mutex_handler(t_mutex *mutex, t_opcode opcode);
 void handler_mutex_error(int status, t_opcode opcode);
 void safe_thread_handler(pthread_t *thread, void *(*start_routine)(void *), void *data, t_opcode opcode);
 void handler_thread_error(int status, t_opcode opcode);
 
-/* init.c function prototypes */
+/* init.c */
 void philo_init(t_table *table) ;
 void data_init(t_table *table) ;
 void assign_forks(t_philo *philo, t_fork *forks, int index);
 
-/* lock_unlock.c function prototypes */
+/* lock_unlock.c */
 void set_bool_value(t_mutex *mutex, bool *flag, bool value);
 void set_long_value(t_mutex *mutex, long *var, long value);
+long get_long_value(t_mutex *mutex, long *var);
 bool get_bool_value(t_mutex *mutex, bool *value);
 bool simulation_start(t_table *table);
 bool simulation_end(t_table *table);
@@ -163,26 +155,37 @@ void wait_all_thread_ready(t_table *table);
 
 
 
-/* Dinning philosophers problem function prototypes */
+/* dining.c / dining_utils.c */
 void *dinner_simulation(void *data);
 void dinner_start(t_table *table);
 void dinner_philosophers(t_table *table);
 void eating(t_philo *philo);
-void thinking(t_philo *philo);
+void thinking(t_philo *philo, bool pre_simulation);
 void sleeping(t_philo *philo);
 void cleanup(t_table *table);
+/* de_synchronization_philosopher_monitor removed: startup staggering was moved/disabled. */
 
 
 
-/*utils.c function prototypes */
+/* utils.c */
 void error_exit(const char *message);
 long get_time_in_ms(t_time_code time_code);
 void precision_usleep(long duration_in_ms, t_table *table);
 
 
-/*write_mutex.c function prototypes */
+
+/* write_mutex.c */
 void write_mutex(t_philo_status status, t_philo *philo, bool debug);
 void write_status_debug(t_philo_status status, t_philo *philo, long elasped_time);
+
+/* syncro_utils.c function prototypes */
+void wait_all_thread_ready(t_table *table);
+void increment_long(t_mutex *mutex, long *validate_input);
+bool all_thread_running(t_mutex *mutex, long *thread_running_count, long num_philos);
+
+/* monitor.c function prototypes */
+void *monitor_dinner(void *data);
+bool philo_is_dead(t_philo *philo);
 
 
 #endif

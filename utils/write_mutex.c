@@ -5,17 +5,12 @@ void write_mutex(t_philo_status status, t_philo *philo, bool debug);
 void write_status_debug(t_philo_status status, t_philo *philo, long elasped_time);
 
 
-/*
- * [time_ms] [Philosopher ID] [Action] 
- * Thread-safe printing function to log philosopher actions with timestamps. 
- * write mutex: 
- */
-
- void write_mutex(t_philo_status status, t_philo *philo, bool debug) {
+/* Thread-safe status printing with timestamps. */
+void write_mutex(t_philo_status status, t_philo *philo, bool debug) {
 
     long elasped_time;
 
-    elasped_time = get_time_in_ms(MILLISECOND);
+    elasped_time = get_time_in_ms(MILLISECOND) - philo->table->simulation_start_time;
 
     if(philo == NULL) {
         error_exit("Philo pointer is NULL in write_mutex function.");

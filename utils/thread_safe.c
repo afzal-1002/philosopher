@@ -1,26 +1,8 @@
 #include "philo.h"
 
-/*  Handles thread-related errors based on the returned status and operation type.
- *  If status is 0, the function returns without error.
- *  Checks for EAGAIN when system resources are insufficient to create a new thread.
- *  Checks for EPERM when the caller lacks permission to set thread scheduling parameters.
- *  Checks for EINVAL during CREATE operation for invalid thread attributes.
- *  Checks for ESRCH when the specified thread cannot be found.
- *  Checks for EINVAL during JOIN or DETACH when the thread reference is invalid.
- *  Checks for EDEADLK when a deadlock is detected or a thread attempts to join itself.
- *  Checks for EINVAL when the thread is not joinable.
- *  Calls error_exit with an appropriate message for each error case.
-*/
+/* Thread wrappers and error handling for create/join/detach. */
 void handler_thread_error(int status, t_opcode opcode);
 
-/*  Provides a safe interface for handling thread operations.
- *  Supports CREATE, JOIN, and DETACH operations based on the opcode.
- *  For CREATE, it initializes a new thread with the given start routine and data.
- *  For JOIN, it waits for the specified thread to finish execution.
- *  For DETACH, it detaches the thread to release resources automatically.
- *  Calls handler_thread_error to validate the result of each operation.
- *  If an invalid opcode is provided, the function will print an error message and exit the program.
-*/
 void safe_thread_handler(pthread_t *thread, void *(*start_routine)(void *),
     void *data, t_opcode opcode);
 
