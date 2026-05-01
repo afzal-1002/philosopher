@@ -17,6 +17,14 @@
 * ./phiilo 5 800 200 200 [5]
 */
 
+
+//** Defines **/
+typedef pthread_mutex_t t_mutex;
+typedef struct s_table t_table;
+typedef struct s_fork t_fork;
+typedef struct s_philo t_philo;
+
+
 // ANSI Escape Codes for colored output
 // pirntf(RED "This text will be red" RESET);
 // fprintf(GREEN "This text will be green" RESET);
@@ -28,8 +36,11 @@
 #define MAGENTA "\033[35m" // Magenta color
 #define CYAN "\033[36m" // Cyan color
 #define RESET "\033[0m" // Reset color Define for error messages
+#define WHITE "\033[37m" // White color for regular messages
 #define ERROR_COLOR RED
 #define ERROR_RESET RESET
+
+#define DEBUG_MODE 1 // Set to 1 to enable debug mode, 0 to disable
 
 
 
@@ -48,12 +59,27 @@ typedef enum e_opcode {
 } t_opcode;
 
 
+/*
+ * enums for the GET TIME function
+*/
+typedef enum e_time_code {
+    SECOND,
+    MILLISECOND,
+    MICROSECOND
+} t_time_code;
 
-//** Defines **/
-typedef pthread_mutex_t t_mutex;
-typedef struct s_table t_table;
-typedef struct s_fork t_fork;
-typedef struct s_philo t_philo;
+
+/* Philo states*/
+typedef enum e_philo_status {
+
+    EATING,
+    SLEEPING,
+    THINKING,
+    TAKEN_FIRST_FORK,
+    TAKEN_SECOND_FORK,
+    DEAD
+} t_philo_status;
+
 
 //** Structures ***
 
@@ -75,6 +101,7 @@ typedef struct s_philo{
     t_fork *first_fork;  // Pointers to the left and right forks
     t_fork *second_fork; // Pointers to the left and right forks
     pthread_t thread_id; // Thread ID for the philosopher's thread
+    t_mutex philo_mutex; // Mutex for synchronizing access to philosopher's data (race conditions)
     t_table *table; // Pointer to the shared table structure
 
 } t_philo;
@@ -92,8 +119,10 @@ typedef struct s_table{
     long num_meals_required; // Number of meals required for each philosopher to be considered full
     long simulation_start_time; // Time when the simulation starts in milliseconds
     long simulation_end_time; // Time when the simulation ends in milliseconds
-    bool all_thread_ready; // Flag to indicate if all philosophers are full
-    t_mutex table_mutex; // Mutex for synchronizing print statements // avoid read/write conflicts when multiple threads print to the console at the same time
+    bool all_thread_ready; // Flag to indicate if all philosophers are ready to start
+    bool simulation_should_end; // Flag to indicate if the simulation should end (someone died or all full)
+    t_mutex table_mutex; // avoid races while reading/writing from the table Mutex for synchronizing print statements // avoid read/write conflicts when multiple threads print to the console at the same time
+    t_mutex write_mutex; // Mutex for synchronizing print statements
     t_philo *philos; // Array of philosophers
     t_fork *forks; // Array of forks
 
@@ -103,12 +132,12 @@ typedef struct s_table{
 
 //** Function Prototypes **
 /* parsing.c function prototypes   */
-void error_exit(const char *message);
 int is_space(char c);
 int is_digit(const char *str);
+int is_digit_space(const char *str);
 long ft_atol(const char *str);
 void parse_input(char **argv, t_table *table);
-char *validate_input(const char *str);
+const char *validate_input(const char *str);
 
 
 /* safe functions prototypes */
@@ -125,6 +154,7 @@ void assign_forks(t_philo *philo, t_fork *forks, int index);
 
 /* lock_unlock.c function prototypes */
 void set_bool_value(t_mutex *mutex, bool *flag, bool value);
+void set_long_value(t_mutex *mutex, long *var, long value);
 bool get_bool_value(t_mutex *mutex, bool *value);
 bool simulation_start(t_table *table);
 bool simulation_end(t_table *table);
@@ -134,10 +164,25 @@ void wait_all_thread_ready(t_table *table);
 
 
 /* Dinning philosophers problem function prototypes */
-void dinner_philosophers(t_table *table);
-void cleanup(t_table *table);
 void *dinner_simulation(void *data);
+void dinner_start(t_table *table);
+void dinner_philosophers(t_table *table);
+void eating(t_philo *philo);
+void thinking(t_philo *philo);
+void sleeping(t_philo *philo);
+void cleanup(t_table *table);
 
+
+
+/*utils.c function prototypes */
+void error_exit(const char *message);
+long get_time_in_ms(t_time_code time_code);
+void precision_usleep(long duration_in_ms, t_table *table);
+
+
+/*write_mutex.c function prototypes */
+void write_mutex(t_philo_status status, t_philo *philo, bool debug);
+void write_status_debug(t_philo_status status, t_philo *philo, long elasped_time);
 
 
 #endif

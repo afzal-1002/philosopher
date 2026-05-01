@@ -4,6 +4,7 @@
 // main.c is the entry point of the program. It initializes the simulation, creates philosopher threads, and manages the overall flow of the dining philosophers problem. The main function will parse command-line arguments, set up the shared table structure, create philosopher threads, and wait for them to finish before cleaning up resources.
 // is a TLDR of the main.c file, which serves as the entry point for the dining philosophers simulation. It is responsible for initializing the simulation, creating philosopher threads, and managing the overall flow of the program. The main function will parse command-line arguments to set up the shared table structure, create philosopher threads, and wait for them to finish before cleaning up resources.
 // ./philo num_philos time_to_die time_to_eat time_to_sleep [meals_required]
+// ./philo 5 800 200 200 [5]
 
 int main(int argc, char *argv[]) {
     // The main function will parse command-line arguments, set up the shared table structure, create philosopher threads, and wait for them to finish before cleaning up resources.

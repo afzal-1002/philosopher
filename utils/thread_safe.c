@@ -42,7 +42,7 @@ void handler_thread_error(int status, t_opcode opcode) {
         return;
 
     if(status == EAGAIN)
-        eror_exit("No resources available to create another thread.");
+        error_exit("No resources available to create another thread.");
      else if(status == EPERM)
         error_exit("The caller does not have appropriate permission to set the scheduling policy and parameters specified in attr.");
     else if(status == EINVAL && opcode == CREATE)

@@ -10,6 +10,12 @@
  * The dining philosophers problem serves as an important example in understanding synchronization issues and designing concurrent algorithms.
 */
 
+void set_bool_value(t_mutex *mutex, bool *flag, bool value);
+bool get_bool_value(t_mutex *mutex, bool *value);
+bool simulation_start(t_table *table);
+bool simulation_end(t_table *table);
+bool is_simulation_start(t_table *table);
+void set_long_value(t_mutex *mutex, long *var, long value);
 
 void set_bool_value(t_mutex *mutex, bool *flag, bool value) {
     safe_mutex_handler(mutex, LOCK);
@@ -23,12 +29,18 @@ bool get_bool_value(t_mutex *mutex, bool *value) {
     flag = *value;
     safe_mutex_handler(mutex, UNLOCK);
     return (flag);
+
+}
+
+void set_long_value(t_mutex *mutex, long *var, long value) {
+    safe_mutex_handler(mutex, LOCK);
+    *var = value;
+    safe_mutex_handler(mutex, UNLOCK);
 }
 
 
 /*
  REDUNTANT CODE, IGNORE
-void set_all_thread_ready(t_table *table, bool value) {
 */
 
 bool simulation_start(t_table *table) {
@@ -36,15 +48,9 @@ bool simulation_start(t_table *table) {
 }
 
 bool simulation_end(t_table *table) {
-    return get_bool_value(&table->table_mutex, &table->all_thread_ready);
+    return get_bool_value(&table->table_mutex, &table->simulation_should_end);
 }
 
 bool is_simulation_start(t_table *table) {
     return get_bool_value(&table->table_mutex, &table->all_thread_ready);
-}
-
-void wait_all_thread_ready(t_table *table) {
-    while (!simulation_start(table)) {
-        usleep(100); // Sleep for a short time to avoid busy waiting
-    }
 }

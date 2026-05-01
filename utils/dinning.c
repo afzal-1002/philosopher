@@ -2,7 +2,9 @@
 
 
 /*
+    * Actual meat of the dining philosophers :
     *./philo 5 800 200 200 [5]
+    * 
     *  utils.c contains utility functions for the dining philosophers simulation.
     *  It includes error handling and input parsing to keep the code modular.
     *  The print_error function displays error messages in a consistent format.
@@ -29,13 +31,15 @@
     * and we can accurately measure the time to die, time to eat, and time to sleep for each
 */
 
-void dinner_philosophers(t_table *table);
-void cleanup(t_table *table);
+
+// This function will contain the routine for each philosopher, including thinking, eating, and sleeping.
+// It will also handle the logic for checking if a philosopher has died or is full.
 void *dinner_simulation(void *data);
+void dinner_start(t_table *table);
 
-void dinner_philosophers(t_table *table) {
+
+void dinner_start(t_table *table) {
     // This function will handle the main logic of the dining philosophers simulation, including thread creation and management.
-
 
     int i = 0;
 
@@ -59,6 +63,9 @@ void dinner_philosophers(t_table *table) {
         // Clean up resources, such as freeing memory and destroying mutexes, after the simulation is complete.
     }
 
+    table->simulation_start_time = get_time_in_ms(MILLISECOND); // Set the simulation start time to the current time in milliseconds.
+    set_bool_value(&table->table_mutex, &table->all_thread_ready, true); // Set the flag to indicate that all philosopher threads are ready to start their routine.
+
     // Now all philosopher threads have been created and are running their routine. We will wait for them to finish and then clean up resources.
     i = 0;
     while (i < table->num_philos) {
@@ -69,13 +76,43 @@ void dinner_philosophers(t_table *table) {
 }
 
 void *dinner_simulation(void *data) {
-    // This function will contain the routine for each philosopher, including thinking, eating, and sleeping.
-    // It will also handle the logic for checking if a philosopher has died or is full.
 
     t_philo *philo = (t_philo *)data;
+    long current_time;
+    long time_since_last_meal;
 
-    wait_all_thread_ready(philo->table); // This function will ensure that all philosopher threads start their routine at the same time by waiting until the simulation start time is set.
+    wait_all_thread_ready(philo->table);
 
-    // Philosopher's routine will be implemented here, but is not included in this snippet.
+    /* Initialize last meal time at the start */
+    set_long_value(&philo->table->table_mutex, &philo->last_meal_time, get_time_in_ms(MILLISECOND));
+
+    /* Main simulation loop: eat -> sleep -> think */
+    while (!simulation_end(philo->table)) {
+        if (philo->full)
+            break;
+        
+        eating(philo);
+        sleeping(philo);
+        thinking(philo);
+
+        /* Check if philosopher has died */
+        current_time = get_time_in_ms(MILLISECOND);
+        time_since_last_meal = current_time - philo->last_meal_time;
+        
+        if (time_since_last_meal > philo->table->time_to_die) {
+            write_mutex(DEAD, philo, false);
+            set_bool_value(&philo->table->table_mutex, &philo->table->simulation_should_end, true);
+            break;
+        }
+    }
+
     return NULL;
 }
+
+/* Wrapper function for dinner_philosophers */
+void dinner_philosophers(t_table *table) {
+    dinner_start(table);
+}
+
+
+
